@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // tem que ter um .env configurado e o database tambem
+}
+
+model User {
+  id        String   @id @default(uuid()) // Chave primária, com um UUID gerado automaticamente
+  email     String   @unique // O email de cada usuário deve ser único
+  name      String
+  password  String // Aqui será guardada a SENHA HASHED, nunca a senha pura!
+  role      Role     @default(CUSTOMER) // Papel do usuário, com 'CUSTOMER' como padrão
+  createdAt DateTime @default(now()) // Data de criação, gerada automaticamente
+  updatedAt DateTime @updatedAt // Data da última atualização, gerada automaticamente
+}
+
+// Enum para os papéis (roles) dos usuários
+enum Role {
+  CUSTOMER
+  ADMIN
+}
