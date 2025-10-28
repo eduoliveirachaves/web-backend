@@ -1,98 +1,131 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# [Nome do Projeto] - API de E-commerce
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Este é o repositório do backend para o projeto de e-commerce de produtos esportivos. Esta API é construída com Nest.js e utiliza Prisma como ORM para se comunicar com um banco de dados PostgreSQL.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tecnologias Utilizadas
 
-## Description
+* **Framework:** Nest.js
+* **ORM:** Prisma
+* **Banco de Dados:** PostgreSQL
+* **Linguagem:** TypeScript
+* **Validação:** `class-validator` e `class-transformer`
+* **Autenticação:** JWT (JSON Web Tokens) com Passport
+* **Hashing de Senha:** `bcrypt`
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## 🚀 Começando
 
-```bash
-$ npm install
-```
+Siga estes passos para configurar e rodar o projeto localmente.
 
-## Compile and run the project
+### 1. Pré-requisitos
+
+* **Node.js:** Versão 20.x ou superior. (Recomendamos usar um gerenciador de versões como o [NVM](https://github.com/nvm-sh/nvm)).
+* **NPM:** Versão 10.x ou superior.
+* **PostgreSQL:** Uma instância local do PostgreSQL rodando.
+* **Git:** Para clonar o projeto.
+
+### 2. Clonar o Repositório
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+git clone [URL_DO_SEU_REPOSITORIO_AQUI]
+cd [NOME_DA_PASTA_DO_PROJETO]
 ```
 
-## Run tests
+### 3. Instalar Dependências
+
+Este comando instalará o Nest.js, Prisma e todas as outras dependências listadas no package.json.
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm install
 ```
 
-## Deployment
+### 4. Configurar o Ambiente
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Você precisa de um arquivo `.env` para armazenar suas variáveis de ambiente, como a string de conexão do banco de dados.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+#### a. Crie o arquivo `.env`:
+
+Você pode copiar o arquivo de exemplo (que deve estar no `.gitignore`):
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+cp .env.example .env
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+(Se você não tiver um `.env.example`, apenas crie um novo arquivo chamado `.env` na raiz do projeto.)
 
-## Resources
+#### b. Edite o arquivo `.env`:
 
-Check out a few resources that may come in handy when working with NestJS:
+Adicione a sua string de conexão do PostgreSQL. O Prisma a usará para se conectar ao seu banco de dados local.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+# .env
 
-## Support
+# Formato: postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public
+DATABASE_URL="postgresql://edu:sua_senha_aqui@localhost:5432/web?schema=public"
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Adicione também um segredo para o JWT
+JWT_SECRET="SEU_SEGREDO_SUPER_SEGURO_AQUI"
+```
 
-## Stay in touch
+### 5. Configurar o Banco de Dados (Prisma)
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Com seu arquivo `.env` configurado, você precisa dizer ao Prisma para "aplicar" o seu schema ao seu banco de dados local. Este comando lerá sua pasta `prisma/migrations` e criará todas as tabelas (como User, Product, etc.).
 
-## License
+```bash
+npx prisma migrate dev
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### 6. Rodar a Aplicação
+
+Agora você está pronto para iniciar o servidor de desenvolvimento.
+
+```bash
+npm run start:dev
+```
+
+O servidor estará rodando em modo "watch" (reinicia automaticamente a cada mudança) no endereço:  
+**http://localhost:3001** (ou a porta definida no seu `main.ts`).
+
+---
+
+## 🏗️ Fluxo de Trabalho do Prisma (Migrações)
+
+Sempre que você precisar alterar a estrutura do banco de dados (criar uma nova tabela ou modificar uma existente), siga estes dois passos:
+
+1. **Modifique o Schema:** Edite o arquivo `prisma/schema.prisma`.
+2. **Rode a Migração:** Execute o comando `migrate dev`, dando um nome descritivo para a sua mudança.
+
+```bash
+# Exemplo de criação de uma nova tabela de Produtos
+npx prisma migrate dev --name add-product-model
+
+# Exemplo de adição de uma coluna em uma tabela existente
+npx prisma migrate dev --name add-stock-to-product
+```
+
+### Resetar o Banco de Desenvolvimento
+
+Se em algum momento seu banco de dados local ficar "sujo" ou inconsistente, você pode resetá-lo completamente com este comando (⚠️ APAGA TODOS OS DADOS):
+
+```bash
+npx prisma migrate reset
+```
+
+---
+
+## 📜 Scripts Principais do package.json
+
+- `npm run start:dev`: Inicia a aplicação em modo de desenvolvimento com "watch".
+- `npm run start:prod`: Inicia a aplicação em modo de produção (requer `npm run build` primeiro).
+- `npm run build`: Compila o código TypeScript para JavaScript (no diretório dist).
+- `npm run lint`: Roda o ESLint para verificar erros de padrão de código.
+- `npm run format`: Roda o Prettier para formatar o código.
+
+---
+
+## 📡 Endpoints da API (Exemplos)
+
+- `POST /auth/register`: Cria um novo usuário.
+- `POST /auth/login`: Autentica um usuário e retorna um JWT.
+- `GET /users/me`: (Protegido) Retorna o perfil do usuário logado.
