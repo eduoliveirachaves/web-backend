@@ -21,7 +21,6 @@ export class RegisterUserDto {
   /**
    * O email do usuário.
    * Deve ter um formato de email válido e não pode ser vazio.
-   * Será usado para o login.
    * @example 'johndoe@email.com'
    */
   @IsEmail()
@@ -39,8 +38,6 @@ export class RegisterUserDto {
 
   /**
    * Campo de confirmação de senha.
-   * Este campo SÓ EXISTE no DTO, não na sua entidade User.
-   * A validação de que as senhas batem será feita no AuthService.
    * @example 'password123'
    */
   @IsString()
@@ -50,7 +47,11 @@ export class RegisterUserDto {
   passwordConfirmation: string;
 
   @IsNumber()
-  @Min(16)
-  @Max(120)
+  @Min(16, {
+    message: 'A idade deve ser maior que 16 anos.',
+  })
+  @Max(120, {
+    message: 'A idade deve ser menor que 120 anos.',
+  })
   age: number;
 }
