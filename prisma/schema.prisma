@@ -16,10 +16,24 @@ model User {
   role      Role     @default(CUSTOMER) // Papel do usuário, com 'CUSTOMER' como padrão
   createdAt DateTime @default(now()) // Data de criação, gerada automaticamente
   updatedAt DateTime @updatedAt // Data da última atualização, gerada automaticamente
+  products    Product[]
 }
 
 // Enum para os papéis (roles) dos usuários
 enum Role {
   CUSTOMER
   ADMIN
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Decimal    @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sellerId    String
+  seller      User     @relation(fields: [sellerId], references: [id])
 }
