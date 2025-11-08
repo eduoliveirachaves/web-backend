@@ -29,7 +29,9 @@ export class OrderController {
   }
 
   @Patch(':id')
-  updateOrder(@Param('id') id: string, @Body() body: any) {}
+  updateOrder(@Param('id') id: string, @Body() body: any) {
+    return this.orderService.update(id, body);
+  }
 
   @Delete(':id')
   deleteOrder(@Param('id') id: string) {}
