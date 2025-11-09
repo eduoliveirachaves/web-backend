@@ -9,6 +9,7 @@ export class OrderService {
       userId: 1,
       totalAmount: 5,
       status: 'em analise',
+      createdAt: '22/10/2025',
     },
   ];
 
