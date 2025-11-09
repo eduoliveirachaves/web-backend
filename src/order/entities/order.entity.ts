@@ -3,4 +3,5 @@ export class Order {
   userId: number;
   totalAmount: number;
   status: string;
+  createdAt: string;
 }
