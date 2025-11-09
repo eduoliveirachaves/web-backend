@@ -34,5 +34,7 @@ export class OrderController {
   }
 
   @Delete(':id')
-  deleteOrder(@Param('id') id: string) {}
+  deleteOrder(@Param('id') id: string) {
+    return this.orderService.delete(id);
+  }
 }

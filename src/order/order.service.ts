@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Order } from './entities/order.entity';
 @Injectable()
 export class OrderService {
@@ -17,7 +17,11 @@ export class OrderService {
   }
 
   findOne(id: string) {
-    return this.orders.find((order) => order.id === Number(id));
+    const order = this.orders.find((order) => order.id === Number(id));
+
+    if (order) return order;
+
+    throw new HttpException('Esse pedido não existe', HttpStatus.NOT_FOUND);
   }
 
   create(body: any) {
@@ -38,14 +42,32 @@ export class OrderService {
       (order) => order.id === Number(id),
     );
 
-    if (orderIndex >= 0) {
-      const orderItem = this.orders[orderIndex];
-
-      this.orders[orderIndex] = {
-        ...orderItem,
-        ...body,
-      };
+    if (orderIndex < 0) {
+      throw new HttpException('Esse pedido não existe', HttpStatus.NOT_FOUND);
     }
-    return;
+
+    const orderItem = this.orders[orderIndex];
+
+    this.orders[orderIndex] = {
+      ...orderItem,
+      ...body,
+    };
+
+    return this.orders[orderIndex];
+  }
+
+  delete(id: string) {
+    const orderIndex = this.orders.findIndex(
+      (order) => order.id === Number(id),
+    );
+
+    if (orderIndex < 0) {
+      throw new HttpException('Esse pedido não existe', HttpStatus.NOT_FOUND);
+    }
+
+    this.orders.splice(orderIndex, 1);
+    return {
+      message: 'Tarefa Excluida com sucesso',
+    };
   }
 }
