@@ -8,6 +8,8 @@ import {
   Patch,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Controller('order')
 export class OrderController {
@@ -24,13 +26,13 @@ export class OrderController {
   }
 
   @Post()
-  createOrder(@Body() body: any) {
-    return this.orderService.create(body);
+  createOrder(@Body() createOrderDto: CreateOrderDto) {
+    return this.orderService.create(createOrderDto);
   }
 
   @Patch(':id')
-  updateOrder(@Param('id') id: string, @Body() body: any) {
-    return this.orderService.update(id, body);
+  updateOrder(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
+    return this.orderService.update(id, updateOrderDto);
   }
 
   @Delete(':id')
