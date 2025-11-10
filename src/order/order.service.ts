@@ -1,74 +1,80 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Order } from './entities/order.entity';
+import { OrderEntity } from './entities/order.entity';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { ProductEntity } from '@/product/entities/product.entity';
+import { OrderItemEntity } from './entities/order-item.entity';
+import { UpdateOrderDto } from './dto/update-order.dto';
+import { PrismaModule } from '@/prisma/prisma.module';
+import { PrismaService } from '@/prisma/prisma.service';
 @Injectable()
 export class OrderService {
-  //Apenas para testar a funcionalidade das rotas (sem Banco de dados)
-  private orders: Order[] = [
-    {
-      id: 1,
-      userId: 1,
-      totalAmount: 5,
-      status: 'em analise',
-      createdAt: '22/10/2025',
-    },
-  ];
+  constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return this.orders;
+  async findAll() {
+    const allOrders = await this.prisma.order.findMany();
+    return allOrders;
   }
 
-  findOne(id: string) {
-    const order = this.orders.find((order) => order.id === Number(id));
+  async findOne(id: string) {
+    const order = await this.prisma.order.findFirst({
+      where: {
+        id: id,
+      },
+    });
 
-    if (order) return order;
+    if (order?.id) return order;
 
-    throw new HttpException('Esse pedido não existe', HttpStatus.NOT_FOUND);
+    throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
   }
 
-  create(body: any) {
-    const newId = this.orders.length + 1;
+  async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
+    const { userId, items } = createOrderDto;
 
-    const newOrder = {
-      id: newId,
-      ...body,
-    };
+    const products = await this.prisma.product.findMany({
+      where: {
+        id: { in: items.map((i) => i.productId) },
+      },
+    });
 
-    this.orders.push(newOrder);
+    const orderItems = items.map((item) => {
+      const product = products.find((p) => p.id === item.productId);
+      if (!product)
+        throw new HttpException('Produto não encontrado', HttpStatus.NOT_FOUND);
 
-    return newOrder;
-  }
+      return {
+        productId: product.id,
+        quantity: item.quantity,
+        unitPrice: product.price,
+      };
+    });
 
-  update(id: string, body: any) {
-    const orderIndex = this.orders.findIndex(
-      (order) => order.id === Number(id),
+    const totalAmount = orderItems.reduce(
+      (acc, item) => acc + item.unitPrice.toNumber() * item.quantity,
+      0,
     );
 
-    if (orderIndex < 0) {
-      throw new HttpException('Esse pedido não existe', HttpStatus.NOT_FOUND);
-    }
+    const order = await this.prisma.order.create({
+      data: {
+        userId,
+        totalAmount,
+        status: 'PENDING',
+        items: { create: orderItems },
+      },
+      include: { items: true },
+    });
 
-    const orderItem = this.orders[orderIndex];
-
-    this.orders[orderIndex] = {
-      ...orderItem,
-      ...body,
-    };
-
-    return this.orders[orderIndex];
-  }
-
-  delete(id: string) {
-    const orderIndex = this.orders.findIndex(
-      (order) => order.id === Number(id),
-    );
-
-    if (orderIndex < 0) {
-      throw new HttpException('Esse pedido não existe', HttpStatus.NOT_FOUND);
-    }
-
-    this.orders.splice(orderIndex, 1);
+    // Converter campos Decimal para number manualmente
     return {
-      message: 'Tarefa Excluida com sucesso',
-    };
+      ...order,
+      totalAmount: Number(order.totalAmount),
+      items: order.items.map((item) => ({
+        ...item,
+        unitPrice: Number(item.unitPrice),
+      })),
+    } as OrderEntity;
   }
+
+  update(id: string, updateOrderDto: UpdateOrderDto) {}
+
+  delete(id: string) {}
 }
