@@ -30,8 +30,10 @@ export class AuthService {
       throw new BadRequestException('O usuário já existe.');
     }
 
-    // @ts-expect-error
-    const saltOrRounds: string = process.env.SALT_OR_ROUNDS;
+    // ts-expect-error -> era um decorator, tirei apenas o @
+    // nao conseguia rodar mesmo com ele comentado
+    //const saltOrRounds: string = process.env.SALT_OR_ROUNDS;
+    const saltOrRounds = Number(process.env.SALT_OR_ROUNDS) || 10;
     const hashedPassword = await bcrypt.hash(
       registerDto.password,
       saltOrRounds,
