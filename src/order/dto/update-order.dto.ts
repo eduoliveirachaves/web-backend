@@ -1,4 +1,34 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateOrderDto } from './create-order.dto';
+import {
+  IsEnum,
+  IsOptional,
+  ValidateNested,
+  IsArray,
+  IsInt,
+  IsPositive,
+  IsString,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { OrderStatus } from 'generated/prisma'; // ou declare o enum manualmente, se preferir
 
-export class UpdateOrderDto extends PartialType(CreateOrderDto) {}
+class UpdateOrderItemDto {
+  @IsString()
+  @IsOptional()
+  productId?: string;
+
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  quantity?: number;
+}
+
+export class UpdateOrderDto {
+  @IsEnum(OrderStatus)
+  @IsOptional()
+  status?: OrderStatus;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateOrderItemDto)
+  @IsOptional()
+  items?: UpdateOrderItemDto[];
+}
