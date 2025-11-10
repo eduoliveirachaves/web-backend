@@ -18,6 +18,7 @@ model User {
   createdAt DateTime @default(now()) // Data de criação, gerada automaticamente
   updatedAt DateTime @updatedAt // Data da última atualização, gerada automaticamente
   products    Product[]
+  orders    Order[]
 }
 
 // Enum para os papéis (roles) dos usuários
@@ -37,4 +38,36 @@ model Product {
   updatedAt   DateTime @updatedAt
   sellerId    String
   seller      User     @relation(fields: [sellerId], references: [id])
+
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  totalAmount Decimal        @db.Decimal(10, 2)
+  status      OrderStatus    @default(PENDING)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  quantity   Int
+  unitPrice  Decimal  @db.Decimal(10, 2)
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELED
 }
