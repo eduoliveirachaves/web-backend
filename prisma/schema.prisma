@@ -7,20 +7,21 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   // Use a conexão direta (porta 5432) APENAS para migrações:
-  directUrl = env("DIRECT_URL") 
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id        String   @id @default(uuid()) // Chave primária, com um UUID gerado automaticamente
-  email     String   @unique
+  id        String    @id @default(uuid()) // Chave primária, com um UUID gerado automaticamente
+  email     String    @unique
   name      String
   password  String // Aqui será guardada a SENHA HASHED, nunca a senha pura!
-  role      Role     @default(CUSTOMER) // Papel do usuário, com 'CUSTOMER' como padrão
+  role      Role      @default(CUSTOMER) // Papel do usuário, com 'CUSTOMER' como padrão
   age       Int
-  createdAt DateTime @default(now()) // Data de criação, gerada automaticamente
-  updatedAt DateTime @updatedAt // Data da última atualização, gerada automaticamente
-  products    Product[]
+  createdAt DateTime  @default(now()) // Data de criação, gerada automaticamente
+  updatedAt DateTime  @updatedAt // Data da última atualização, gerada automaticamente
+  products  Product[]
   orders    Order[]
+  ratings   Rating[]
 }
 
 // Enum para os papéis (roles) dos usuários
@@ -30,43 +31,45 @@ enum Role {
 }
 
 model Product {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  price       Decimal    @db.Decimal(10, 2)
-  stock       Int      @default(0)
-  isAvailable Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  sellerId    String
-  seller      User     @relation(fields: [sellerId], references: [id])
-  imageUrl    String?   // URL da imagem do produto (opcional)
-  categoryId  String?   // chave estrangeira opcional
-  category    Category? @relation(fields: [categoryId], references: [id])
+  id            String    @id @default(uuid())
+  name          String
+  description   String?
+  price         Decimal   @db.Decimal(10, 2)
+  stock         Int       @default(0)
+  isAvailable   Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sellerId      String
+  seller        User      @relation(fields: [sellerId], references: [id])
+  imageUrl      String? // URL da imagem do produto (opcional)
+  categoryId    String? // chave estrangeira opcional
+  category      Category? @relation(fields: [categoryId], references: [id])
+  averageRating Float?    @default(0)
 
-  orderItems  OrderItem[]
+  orderItems OrderItem[]
+  ratings    Rating[]
 }
 
 model Order {
-  id          String        @id @default(uuid())
+  id          String      @id @default(uuid())
   userId      String
-  user        User          @relation(fields: [userId], references: [id])
-  totalAmount Decimal        @db.Decimal(10, 2)
-  status      OrderStatus    @default(PENDING)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  user        User        @relation(fields: [userId], references: [id])
+  totalAmount Decimal     @db.Decimal(10, 2)
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  items       OrderItem[]
+  items OrderItem[]
 }
 
 model OrderItem {
-  id         String   @id @default(uuid())
-  orderId    String
-  order      Order    @relation(fields: [orderId], references: [id])
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id])
-  quantity   Int
-  unitPrice  Decimal  @db.Decimal(10, 2)
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
 }
 
 enum OrderStatus {
@@ -83,4 +86,17 @@ model Category {
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model Rating {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  rate      Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 }
