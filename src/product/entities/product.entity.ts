@@ -22,6 +22,12 @@ export class ProductEntity {
   isAvailable: boolean;
 
   @Expose()
+  imageUrl?: string;
+
+  @Expose()
+  categoryId?: string;
+
+  @Expose()
   createdAt: Date;
 
   @Expose()

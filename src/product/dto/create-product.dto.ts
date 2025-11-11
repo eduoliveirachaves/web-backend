@@ -6,6 +6,8 @@ import {
   IsNotEmpty,
   IsPositive,
   IsInt,
+  IsOptional,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -29,4 +31,12 @@ export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
   sellerId: string;
+
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
+
+  @IsUUID()
+  @IsOptional()
+  categoryId?: string;
 }
