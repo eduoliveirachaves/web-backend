@@ -6,6 +6,7 @@ import {
   Post,
   Body,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -17,7 +18,7 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get()
-  findAllOrders(paginationDto?: PaginationDto) {
+  findAllOrders(@Query() paginationDto?: PaginationDto) {
     return this.orderService.findAll(paginationDto);
   }
 
