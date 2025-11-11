@@ -7,12 +7,17 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaModule } from '@/prisma/prisma.module';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Prisma } from 'generated/prisma';
+import { PaginationDto } from '@/common/dto/pagination.dto';
 @Injectable()
 export class OrderService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
-    const allOrders = await this.prisma.order.findMany();
+  async findAll(paginationDto?: PaginationDto) {
+    const { limit, offset } = paginationDto || {};
+    const allOrders = await this.prisma.order.findMany({
+      take: limit,
+      skip: offset,
+    });
     return allOrders;
   }
 
@@ -159,22 +164,33 @@ export class OrderService {
   }
 
   async delete(id: string) {
-    const existingOrder = await this.prisma.order.findUnique({
-      where: { id },
-    });
+    try {
+      const existingOrder = await this.prisma.order.findUnique({
+        where: { id },
+      });
 
-    if (!existingOrder) {
-      throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
+      if (!existingOrder) {
+        throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
+      }
+
+      //Necessario para deletar os items do pedido antes do pedido ser deletado.
+      // Implementar no schema do prisma depois e retirar daqui.
+      await this.prisma.orderItem.deleteMany({
+        where: { orderId: id },
+      });
+
+      await this.prisma.order.delete({
+        where: { id },
+      });
+
+      return {
+        message: 'Pedido excluído com sucesso',
+      };
+    } catch (err) {
+      throw new HttpException(
+        'Falha ao deletar a tarefa',
+        HttpStatus.BAD_REQUEST,
+      );
     }
-
-    //Necessario para deletar os items do pedido antes do pedido ser deletado.
-    // Implementar no schema do prisma depois e retirar daqui.
-    await this.prisma.orderItem.deleteMany({
-      where: { orderId: id },
-    });
-
-    await this.prisma.order.delete({
-      where: { id },
-    });
   }
 }

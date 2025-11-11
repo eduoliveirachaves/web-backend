@@ -10,14 +10,15 @@ import {
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { PaginationDto } from '@/common/dto/pagination.dto';
 
 @Controller('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get()
-  findAllOrders() {
-    return this.orderService.findAll();
+  findAllOrders(paginationDto?: PaginationDto) {
+    return this.orderService.findAll(paginationDto);
   }
 
   @Get(':id')
