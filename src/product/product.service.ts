@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { PaginationDto } from '@/common/dto/pagination.dto';
 
 @Injectable()
 export class ProductService {
@@ -13,14 +14,19 @@ export class ProductService {
       description: dto.description,
       price: dto.price,
       stock: dto.stock,
+      imageUrl: dto.imageUrl,
+      categoryId: dto.categoryId,
       sellerId: dto.sellerId,
     };
 
     return this.prisma.product.create({ data });
   }
 
-  async findAll() {
+  async findAll(paginationDto?: PaginationDto) {
+    const { limit, offset } = paginationDto || {};
     const allProducts = await this.prisma.product.findMany({
+      take: limit,
+      skip: offset,
       include: { seller: { select: { id: true, email: true, name: true } } },
     });
 
