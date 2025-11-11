@@ -1,5 +1,6 @@
 import { Exclude, Expose, Type } from 'class-transformer';
 import { UserEntity } from '../../user/entities/user.entity';
+import { RatingEntity } from '@/rating/entities/rating.entity';
 
 @Exclude()
 export class ProductEntity {
@@ -37,6 +38,13 @@ export class ProductEntity {
   sellerId: string;
 
   @Expose()
+  averageRating: number;
+
+  @Expose()
   @Type(() => UserEntity)
   seller?: UserEntity;
+
+  @Expose()
+  @Type(() => RatingEntity)
+  ratings?: RatingEntity[];
 }
