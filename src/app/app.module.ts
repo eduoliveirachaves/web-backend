@@ -9,6 +9,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { ProductModule } from '@/product/product.module';
 import { OrderModule } from '@/order/order.module';
 import { CategoryModule } from '@/category/category.module';
+import { RatingModule } from '@/rating/rating.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { CategoryModule } from '@/category/category.module';
     ProductModule,
     OrderModule,
     CategoryModule,
+    RatingModule,
   ],
   controllers: [AppController, UserController],
   providers: [AppService, UserService],
