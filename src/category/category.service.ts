@@ -33,13 +33,13 @@ export class CategoryService {
   }
 
   async create(createCategoryDto: CreateCategoryDto): Promise<CategoryEntity> {
-    const existingCategory = this.prisma.category.findUnique({
+    const existingCategory = await this.prisma.category.findUnique({
       where: {
         name: createCategoryDto.name,
       },
     });
 
-    if (!existingCategory) {
+    if (existingCategory) {
       throw new HttpException(
         'Essa categoria já existe',
         HttpStatus.BAD_REQUEST,
