@@ -3,6 +3,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateRatingDto } from './dto/create-rating.dto';
 import { RatingEntity } from './entities/rating.entity';
 import { PaginationDto } from '@/common/dto/pagination.dto';
+import { UpdateRatingDto } from './dto/update-rating.dto';
 
 @Injectable()
 export class RatingService {
@@ -29,13 +30,19 @@ export class RatingService {
     });
   }
 
-  async findAllByUser(userId: string): Promise<RatingEntity[]> {
+  async findAllByUser(
+    userId: string,
+    paginationDto?: PaginationDto,
+  ): Promise<RatingEntity[]> {
+    const { limit, offset } = paginationDto || {};
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (!user)
       throw new HttpException('Usuário não encontrado', HttpStatus.NOT_FOUND);
 
     return await this.prisma.rating.findMany({
+      take: limit,
+      skip: offset,
       where: { userId },
       include: { product: { select: { id: true, name: true } } },
       orderBy: { createdAt: 'desc' },
@@ -76,9 +83,43 @@ export class RatingService {
     return rating;
   }
 
-  async update() {} //IMPLEMENTAR
+  async update(
+    id: string,
+    updateRatingDto: UpdateRatingDto,
+  ): Promise<RatingEntity> {
+    const rating = await this.prisma.rating.findUnique({ where: { id } });
 
-  async delete() {} //IMPLEMENTAR
+    if (!rating) {
+      throw new HttpException('Avaliação não encontrada', HttpStatus.NOT_FOUND);
+    }
+
+    const updatedRating = await this.prisma.rating.update({
+      where: { id },
+      data: {
+        rate: updateRatingDto.rate ?? rating.rate,
+        comment: updateRatingDto.comment ?? rating.comment,
+      },
+      include: { user: true, product: true },
+    });
+
+    await this.updateProductAverageRating(updatedRating.productId);
+
+    return updatedRating;
+  }
+
+  async delete(id: string): Promise<{ message: string }> {
+    const rating = await this.prisma.rating.findUnique({ where: { id } });
+
+    if (!rating) {
+      throw new HttpException('Avaliação não encontrada', HttpStatus.NOT_FOUND);
+    }
+
+    await this.prisma.rating.delete({ where: { id } });
+
+    await this.updateProductAverageRating(rating.productId);
+
+    return { message: 'Avaliação excluida com sucesso' };
+  }
 
   private async updateProductAverageRating(productId: string): Promise<void> {
     const ratings = await this.prisma.rating.findMany({
