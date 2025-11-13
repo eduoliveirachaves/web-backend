@@ -10,6 +10,7 @@ import { ProductModule } from '@/product/product.module';
 import { OrderModule } from '@/order/order.module';
 import { CategoryModule } from '@/category/category.module';
 import { RatingModule } from '@/rating/rating.module';
+import { AdressModule } from '@/adress/adress.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RatingModule } from '@/rating/rating.module';
     OrderModule,
     CategoryModule,
     RatingModule,
+    AdressModule,
   ],
   controllers: [AppController, UserController],
   providers: [AppService, UserService],
