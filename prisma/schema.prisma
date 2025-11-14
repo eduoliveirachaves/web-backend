@@ -155,12 +155,14 @@ enum PaymentGateway {
 }
 
 model PaymentTransaction {
-  id            String         @id @default(uuid())
-  orderId       String
-  amount        Decimal        @db.Decimal(10, 2)
-  status        PaymentStatus
-  gateway       PaymentGateway
-  transactionAt DateTime       @default(now())
+  id              String         @id @default(uuid())
+  orderId         String
+  amount          Decimal        @db.Decimal(10, 2)
+  status          PaymentStatus  @default(AGUARDANDO)
+  gateway         PaymentGateway
+  gatewayResponse String? // Resposta do gateway (JSON ou texto)
+  transactionAt   DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   order Order @relation(fields: [orderId], references: [id])
 
