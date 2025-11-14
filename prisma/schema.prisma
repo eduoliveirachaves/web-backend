@@ -25,7 +25,7 @@ model User {
   adresses       Adress[]
   paymentMethods PaymentMethod[]
   carts          Cart[]
-  wishList       wishList[]
+  wishList       WishList[]
 }
 
 // Enum para os papéis (roles) dos usuários
@@ -48,12 +48,12 @@ model Product {
   imageUrl      String? // URL da imagem do produto (opcional)
   categoryId    String? // chave estrangeira opcional
   category      Category? @relation(fields: [categoryId], references: [id])
-  averageRating Float?    @default(0)
+  averageRating Float     @default(0)
 
   orderItems OrderItem[]
   ratings    Rating[]
   cartItems  CartItem[]
-  wishList   wishList[]
+  wishList   WishList[]
 }
 
 model Order {
@@ -192,7 +192,7 @@ model PaymentTransaction {
   @@map("payment_transactions")
 }
 
-model wishList {
+model WishList {
   id        String   @id @default(uuid())
   userId    String
   productId String
