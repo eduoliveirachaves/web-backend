@@ -24,6 +24,8 @@ model User {
   ratings        Rating[]
   adresses       Adress[]
   paymentMethods PaymentMethod[]
+  carts          Cart[]
+  wishList       wishList[]
 }
 
 // Enum para os papéis (roles) dos usuários
@@ -50,6 +52,8 @@ model Product {
 
   orderItems OrderItem[]
   ratings    Rating[]
+  cartItems  CartItem[]
+  wishList   wishList[]
 }
 
 model Order {
@@ -61,7 +65,8 @@ model Order {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  items OrderItem[]
+  items               OrderItem[]
+  paymentTransactions PaymentTransaction[]
 }
 
 model OrderItem {
@@ -136,4 +141,66 @@ enum PaymentType {
   CARTAO
   PIX
   BOLETO
+}
+
+model Cart {
+  id        String   @id @default(uuid())
+  userId    String
+  createdAt DateTime @default(now())
+
+  user  User       @relation(fields: [userId], references: [id])
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int    @default(1)
+
+  cart    Cart    @relation(fields: [cartId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+enum PaymentStatus {
+  AGUARDANDO
+  CONFIRMADO
+  FALHOU
+}
+
+enum PaymentGateway {
+  PAYPAL
+  STRIPE
+  PAGSEGURO
+}
+
+model PaymentTransaction {
+  id            String         @id @default(uuid())
+  orderId       String
+  amount        Decimal        @db.Decimal(10, 2)
+  status        PaymentStatus
+  gateway       PaymentGateway
+  transactionAt DateTime       @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("payment_transactions")
+}
+
+model wishList {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  addedAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId]) // não pode favoritar duas vezes o mesmo produto
+  @@map("favorites")
 }
