@@ -11,6 +11,9 @@ import { OrderModule } from '@/order/order.module';
 import { CategoryModule } from '@/category/category.module';
 import { RatingModule } from '@/rating/rating.module';
 import { AdressModule } from '@/adress/adress.module';
+import { PaymentMethodModule } from '@/payment-method/payment-method.module';
+import { PaymentTransactionModule } from '@/payment-transaction/payment-transaction.module';
+import { WishListModule } from '@/wish-list/wish-list.module';
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { AdressModule } from '@/adress/adress.module';
     CategoryModule,
     RatingModule,
     AdressModule,
+    PaymentMethodModule,
+    PaymentTransactionModule,
+    WishListModule,
   ],
   controllers: [AppController, UserController],
   providers: [AppService, UserService],

@@ -34,7 +34,7 @@ export class OrderService {
   }
 
   async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
-    const { userId, items } = createOrderDto;
+    const { userId, items, status } = createOrderDto;
 
     const products = await this.prisma.product.findMany({
       where: {
@@ -63,7 +63,7 @@ export class OrderService {
       data: {
         userId,
         totalAmount,
-        status: 'PENDING',
+        status: status || 'PENDING',
         items: { create: orderItems },
       },
       include: { items: true },
@@ -92,6 +92,14 @@ export class OrderService {
 
     if (!existingOrder) {
       throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
+    }
+
+    // Impede alteração de items se o pedido não estiver IN_CART
+    if (updateOrderDto.items && existingOrder.status !== 'IN_CART') {
+      throw new HttpException(
+        'Não é possível alterar items de um pedido que não está no carrinho',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const { items, status } = updateOrderDto;
@@ -192,5 +200,218 @@ export class OrderService {
         HttpStatus.BAD_REQUEST,
       );
     }
+  }
+
+  // ========== MÉTODOS ESPECÍFICOS PARA CARRINHO ==========
+
+  /**
+   * Adiciona um item ao carrinho (order com status IN_CART)
+   */
+  async addItemToCart(
+    orderId: string,
+    productId: string,
+    quantity: number,
+  ): Promise<OrderEntity> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+
+    if (!order) {
+      throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
+    }
+
+    if (order.status !== 'IN_CART') {
+      throw new HttpException(
+        'Apenas pedidos com status IN_CART podem ter items adicionados',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new HttpException('Produto não encontrado', HttpStatus.NOT_FOUND);
+    }
+
+    // Verifica se o item já existe no carrinho
+    const existingItem = order.items.find(
+      (item) => item.productId === productId,
+    );
+
+    if (existingItem) {
+      // Se já existe, apenas incrementa a quantidade
+      await this.prisma.orderItem.update({
+        where: { id: existingItem.id },
+        data: { quantity: existingItem.quantity + quantity },
+      });
+    } else {
+      // Se não existe, cria novo item
+      await this.prisma.orderItem.create({
+        data: {
+          orderId,
+          productId,
+          quantity,
+          unitPrice: product.price,
+        },
+      });
+    }
+
+    // Recalcula o total
+    const updatedOrder = await this.recalculateOrderTotal(orderId);
+    return updatedOrder;
+  }
+
+  /**
+   * Atualiza a quantidade de um item no carrinho
+   */
+  async updateCartItemQuantity(
+    orderId: string,
+    itemId: string,
+    quantity: number,
+  ): Promise<OrderEntity> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+
+    if (!order) {
+      throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
+    }
+
+    if (order.status !== 'IN_CART') {
+      throw new HttpException(
+        'Apenas pedidos com status IN_CART podem ter items alterados',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const item = order.items.find((i) => i.id === itemId);
+
+    if (!item) {
+      throw new HttpException(
+        'Item não encontrado no pedido',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    await this.prisma.orderItem.update({
+      where: { id: itemId },
+      data: { quantity },
+    });
+
+    // Recalcula o total
+    const updatedOrder = await this.recalculateOrderTotal(orderId);
+    return updatedOrder;
+  }
+
+  /**
+   * Remove um item do carrinho
+   */
+  async removeCartItem(orderId: string, itemId: string): Promise<OrderEntity> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+
+    if (!order) {
+      throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
+    }
+
+    if (order.status !== 'IN_CART') {
+      throw new HttpException(
+        'Apenas pedidos com status IN_CART podem ter items removidos',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const item = order.items.find((i) => i.id === itemId);
+
+    if (!item) {
+      throw new HttpException(
+        'Item não encontrado no pedido',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    await this.prisma.orderItem.delete({
+      where: { id: itemId },
+    });
+
+    // Recalcula o total
+    const updatedOrder = await this.recalculateOrderTotal(orderId);
+    return updatedOrder;
+  }
+
+  /**
+   * Limpa todos os items do carrinho
+   */
+  async clearCart(orderId: string): Promise<OrderEntity> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
+    }
+
+    if (order.status !== 'IN_CART') {
+      throw new HttpException(
+        'Apenas pedidos com status IN_CART podem ser limpos',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.prisma.orderItem.deleteMany({
+      where: { orderId },
+    });
+
+    const updatedOrder = await this.prisma.order.update({
+      where: { id: orderId },
+      data: { totalAmount: 0 },
+      include: { items: true },
+    });
+
+    return {
+      ...updatedOrder,
+      totalAmount: Number(updatedOrder.totalAmount),
+      items: [],
+    } as OrderEntity;
+  }
+
+  /**
+   * Recalcula o total do pedido com base nos items atuais
+   */
+  private async recalculateOrderTotal(orderId: string): Promise<OrderEntity> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+
+    if (!order) {
+      throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
+    }
+
+    const totalAmount = order.items.reduce(
+      (acc, item) => acc + Number(item.unitPrice) * item.quantity,
+      0,
+    );
+
+    const updatedOrder = await this.prisma.order.update({
+      where: { id: orderId },
+      data: { totalAmount },
+      include: { items: true },
+    });
+
+    return {
+      ...updatedOrder,
+      totalAmount: Number(updatedOrder.totalAmount),
+      items: updatedOrder.items.map((item) => ({
+        ...item,
+        unitPrice: Number(item.unitPrice),
+      })),
+    } as OrderEntity;
   }
 }

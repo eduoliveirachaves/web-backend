@@ -6,8 +6,8 @@ import {
   Param,
   Patch,
   Post,
-  UseInterceptors,
-  ClassSerializerInterceptor,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 
 import { PaymentMethodService } from './payment-method.service';
@@ -20,6 +20,7 @@ export class PaymentMethodController {
   constructor(private readonly paymentMethodService: PaymentMethodService) {}
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   create(
     @Body() createPaymentMethodDto: CreatePaymentMethodDto,
   ): Promise<PaymentMethodEntity> {
@@ -47,6 +48,7 @@ export class PaymentMethodController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.OK)
   delete(@Param('id') id: string): Promise<{ message: string }> {
     return this.paymentMethodService.delete(id);
   }

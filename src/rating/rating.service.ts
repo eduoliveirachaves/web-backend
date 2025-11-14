@@ -24,7 +24,7 @@ export class RatingService {
     return this.prisma.rating.findMany({
       take: limit,
       skip: offset,
-      where: { id: productId },
+      where: { productId },
       include: { user: { select: { id: true, name: true } } },
       orderBy: { createdAt: 'desc' },
     });

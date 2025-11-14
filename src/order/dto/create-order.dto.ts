@@ -1,6 +1,14 @@
-import { IsNotEmpty, IsString, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsArray,
+  ValidateNested,
+  IsEnum,
+  IsOptional,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrderItemDto } from './order-item.dto';
+import { OrderStatus } from 'generated/prisma';
 
 export class CreateOrderDto {
   // o userId deve vit do token de autenticação,
@@ -13,4 +21,8 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   readonly items: OrderItemDto[];
+
+  @IsEnum(OrderStatus)
+  @IsOptional()
+  readonly status?: OrderStatus;
 }
