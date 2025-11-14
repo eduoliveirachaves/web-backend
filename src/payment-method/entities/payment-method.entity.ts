@@ -14,7 +14,7 @@ export class PaymentMethodEntity {
   maskedData: string;
 
   @Expose()
-  nickname?: string;
+  nickname?: string | null;
 
   @Expose()
   createdAt: Date;
