@@ -24,7 +24,6 @@ model User {
   ratings        Rating[]
   adresses       Adress[]
   paymentMethods PaymentMethod[]
-  carts          Cart[]
   wishList       WishList[]
 }
 
@@ -52,7 +51,6 @@ model Product {
 
   orderItems OrderItem[]
   ratings    Rating[]
-  cartItems  CartItem[]
   wishList   WishList[]
 }
 
@@ -80,6 +78,7 @@ model OrderItem {
 }
 
 enum OrderStatus {
+  IN_CART
   PENDING
   PAID
   SHIPPED
@@ -141,30 +140,6 @@ enum PaymentType {
   CARTAO
   PIX
   BOLETO
-}
-
-model Cart {
-  id        String   @id @default(uuid())
-  userId    String
-  createdAt DateTime @default(now())
-
-  user  User       @relation(fields: [userId], references: [id])
-  items CartItem[]
-
-  @@map("carts")
-}
-
-model CartItem {
-  id        String @id @default(uuid())
-  cartId    String
-  productId String
-  quantity  Int    @default(1)
-
-  cart    Cart    @relation(fields: [cartId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
-
-  @@unique([cartId, productId])
-  @@map("cart_items")
 }
 
 enum PaymentStatus {
