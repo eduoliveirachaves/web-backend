@@ -1,10 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { OrderEntity } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { ProductEntity } from '@/product/entities/product.entity';
-import { OrderItemEntity } from './entities/order-item.entity';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { PrismaModule } from '@/prisma/prisma.module';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Prisma } from 'generated/prisma';
 import { PaginationDto } from '@/common/dto/pagination.dto';

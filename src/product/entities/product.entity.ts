@@ -1,5 +1,5 @@
 import { Exclude, Expose, Type } from 'class-transformer';
-import { UserEntity } from '../../user/entities/user.entity';
+import { UserEntity } from '@/user/entities/user.entity';
 import { RatingEntity } from '@/rating/entities/rating.entity';
 
 @Exclude()

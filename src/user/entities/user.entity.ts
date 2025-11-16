@@ -1,5 +1,5 @@
 import { Exclude, Expose, Type } from 'class-transformer';
-import { ProductEntity } from '../../product/entities/product.entity';
+import { ProductEntity } from '@/product/entities/product.entity';
 
 @Exclude()
 export class UserEntity {
@@ -30,4 +30,8 @@ export class UserEntity {
   @Expose()
   @Type(() => ProductEntity)
   products?: ProductEntity[];
+
+  constructor(partial: Partial<UserEntity>) {
+    Object.assign(this, partial);
+  }
 }

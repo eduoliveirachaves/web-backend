@@ -1,7 +1,7 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app/app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { setupSwagger } from '@/settings/swagger.settings';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,16 +12,12 @@ async function bootstrap() {
     }),
   );
 
-  const config = new DocumentBuilder()
-    .setTitle('E-commerce API')
-    .setDescription('Documentação da API do E-commerce')
-    .setVersion('1.0')
-    .build();
+  setupSwagger(app);
 
-  const document = SwaggerModule.createDocument(app, config);
-
-  SwaggerModule.setup('api', app, document);
+  const reflector = app.get(Reflector);
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector));
 
   await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();

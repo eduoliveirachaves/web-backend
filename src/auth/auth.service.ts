@@ -1,11 +1,16 @@
 import { UserService } from '@/user/user.service';
 import { RegisterUserDto } from '@/user/dto/register-user.dto';
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UserResponseDto } from '@/user/dto/response-user.dto';
 import { LoginDto } from '@/user/dto/login.dto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { async } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -24,15 +29,16 @@ export class AuthService {
       throw new BadRequestException('As senhas não conferem.');
     }
 
-    const userExists = await this.userService.findOneByEmail(registerDto.email);
+    try {
+      await this.userService.findOneByEmail(registerDto.email);
 
-    if (userExists) {
-      throw new BadRequestException('O usuário já existe.');
+      throw new ConflictException('Um usuário com este email já existe.');
+    } catch (error) {
+      // Se o erro nao for o NotFound como esperado joga o erro novamente
+      if (!(error instanceof NotFoundException)) {
+        throw error;
+      }
     }
-
-    // ts-expect-error -> era um decorator, tirei apenas o @
-    // nao conseguia rodar mesmo com ele comentado
-    //const saltOrRounds: string = process.env.SALT_OR_ROUNDS;
     const saltOrRounds = Number(process.env.SALT_OR_ROUNDS) || 10;
     const hashedPassword = await bcrypt.hash(
       registerDto.password,
@@ -66,7 +72,7 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    const payload = { sub: user.id, email: user.email };
+    const payload = { id: user.id, email: user.email, role: user.role };
     const token = this.jwtService.sign(payload);
 
     return { token };

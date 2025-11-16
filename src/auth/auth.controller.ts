@@ -9,7 +9,9 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @HttpCode(HttpStatus.CREATED)
   signup(@Body() registerUserDto: RegisterUserDto): Promise<UserResponseDto> {
+    console.log(registerUserDto);
     return this.authService.register(registerUserDto);
   }
 
