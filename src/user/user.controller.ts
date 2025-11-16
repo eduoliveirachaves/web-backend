@@ -17,8 +17,9 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import type { User } from 'generated/prisma/client';
 import { Role } from 'generated/prisma/client';
 import { Roles } from '@/auth/decorators/roles.decorator';
+import { RolesGuard } from '@/auth/guards/roles.guard';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}

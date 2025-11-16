@@ -1,5 +1,5 @@
 import { UserService } from '@/user/user.service';
-import { RegisterUserDto } from '@/user/dto/register-user.dto';
+import { RegisterUserDto } from '@/auth/dto/register-user.dto';
 import {
   BadRequestException,
   ConflictException,
@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UserResponseDto } from '@/user/dto/response-user.dto';
-import { LoginDto } from '@/user/dto/login.dto';
+import { LoginDto } from '@/auth/dto/login.dto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { async } from 'rxjs';

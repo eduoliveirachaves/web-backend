@@ -1,5 +1,6 @@
 import { Exclude, Expose, Type } from 'class-transformer';
 import { ProductEntity } from '@/product/entities/product.entity';
+import type { Role } from 'generated/prisma/client';
 
 @Exclude()
 export class UserEntity {
@@ -16,7 +17,7 @@ export class UserEntity {
   password: string;
 
   @Expose()
-  role: string;
+  role: Role;
 
   @Expose()
   age: number;
