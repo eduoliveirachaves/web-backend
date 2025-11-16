@@ -6,6 +6,8 @@ import {
   UseGuards,
   Patch,
   Body,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserEntity } from '@/user/entities/user.entity';
@@ -23,23 +25,27 @@ export class UserController {
 
   @Get()
   @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
   async findAll(): Promise<UserEntity[]> {
     const users = await this.userService.findAll();
     return users.map((u) => new UserEntity(u));
   }
 
   @Get('me')
+  @HttpCode(HttpStatus.OK)
   findMe(@GetUser() user: User): UserEntity {
     return new UserEntity(user);
   }
 
   @Roles(Role.ADMIN)
   @Get(':id')
+  @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string): Promise<UserEntity> {
     return new UserEntity(await this.userService.findOneById(id));
   }
 
   @Patch('me')
+  @HttpCode(HttpStatus.OK)
   async updateMe(
     @GetUser() user: User,
     @Body() updateUserDto: UpdateUserDto,
@@ -49,6 +55,7 @@ export class UserController {
 
   @Roles(Role.ADMIN)
   @Patch(':id')
+  @HttpCode(HttpStatus.OK)
   update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -58,7 +65,7 @@ export class UserController {
 
   @Roles(Role.ADMIN)
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<UserEntity> {
-    return new UserEntity(await this.userService.remove(id));
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.userService.remove(id);
   }
 }

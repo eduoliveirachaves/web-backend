@@ -30,6 +30,7 @@ model User {
 // Enum para os papéis (roles) dos usuários
 enum Role {
   CUSTOMER
+  SELLER
   ADMIN
 }
 
