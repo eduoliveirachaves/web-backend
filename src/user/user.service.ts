@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Prisma, User } from 'generated/prisma';
 import { UpdateUserDto } from '@/user/dto/update-user.dto';
@@ -41,6 +45,20 @@ export class UserService {
   }
 
   updateMe(user: User, updateUserDto: UpdateUserDto): Promise<User> {
+    if (updateUserDto.role === 'ADMIN' && user.role !== 'ADMIN') {
+      throw new UnauthorizedException('Only admins can update other admins');
+    }
+
+    if (
+      updateUserDto.role === 'SELLER' &&
+      user.role !== 'ADMIN' &&
+      user.role !== 'SELLER'
+    ) {
+      throw new UnauthorizedException(
+        'Only admins or sellers can update sellers',
+      );
+    }
+
     return this.prisma.user.update({
       where: { id: user.id },
       data: { ...updateUserDto },
