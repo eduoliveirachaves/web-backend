@@ -12,6 +12,7 @@ import { AdressModule } from '@/adress/adress.module';
 import { PaymentMethodModule } from '@/payment-method/payment-method.module';
 import { PaymentTransactionModule } from '@/payment-transaction/payment-transaction.module';
 import { WishListModule } from '@/wish-list/wish-list.module';
+import { AppController } from '@/app/app.controller';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { WishListModule } from '@/wish-list/wish-list.module';
     PaymentTransactionModule,
     WishListModule,
   ],
-  controllers: [UserController],
+  controllers: [UserController, AppController],
   providers: [UserService],
 })
 export class AppModule {}
