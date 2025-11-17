@@ -11,6 +11,7 @@ Este é o repositório do backend para o projeto de e-commerce de produtos espor
 * **Validação:** `class-validator` e `class-transformer`
 * **Autenticação:** JWT (JSON Web Tokens) com Passport
 * **Hashing de Senha:** `bcrypt`
+* **Documentação:** Swagger (OpenAPI)
 
 ---
 
@@ -64,8 +65,11 @@ Adicione a sua string de conexão do PostgreSQL. O Prisma a usará para se conec
 # Formato: postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public
 DATABASE_URL="postgresql://edu:sua_senha_aqui@localhost:5432/web?schema=public"
 
-# Adicione também um segredo para o JWT
+# Segredo para assinar tokens JWT
 JWT_SECRET="SEU_SEGREDO_SUPER_SEGURO_AQUI"
+
+# Porta da aplicação (opcional, padrão 3001)
+PORT=3001
 ```
 
 ### 5. Configurar o Banco de Dados (Prisma)
@@ -118,14 +122,298 @@ npx prisma migrate reset
 
 - `npm run start:dev`: Inicia a aplicação em modo de desenvolvimento com "watch".
 - `npm run start:prod`: Inicia a aplicação em modo de produção (requer `npm run build` primeiro).
-- `npm run build`: Compila o código TypeScript para JavaScript (no diretório dist).
+- `npm run build`: Compila o código TypeScript para JavaScript (no diretório `dist`).
 - `npm run lint`: Roda o ESLint para verificar erros de padrão de código.
 - `npm run format`: Roda o Prettier para formatar o código.
+- `npm run test`: Roda os testes unitários.
+- `npm run test:e2e`: Roda os testes end-to-end.
 
 ---
 
-## 📡 Endpoints da API (Exemplos)
+## 📖 Documentação da API
 
-- `POST /auth/register`: Cria um novo usuário.
-- `POST /auth/login`: Autentica um usuário e retorna um JWT.
-- `GET /users/me`: (Protegido) Retorna o perfil do usuário logado.
+### Swagger (OpenAPI)
+
+A API é documentada com Swagger. Após subir a aplicação em ambiente de desenvolvimento, acesse:
+
+- **Documentação Swagger UI:** `https://web-backend-sck9.onrender.com/docs`
+
+Lá você poderá:
+- Ver todos os endpoints disponíveis;
+- Inspecionar os modelos de request/response;
+- Testar chamadas autenticadas usando o botão `Authorize` com um token JWT.
+
+> Observação: a rota `/api` pode estar configurada de forma diferente no seu `main.ts`. Ajuste a URL caso necessário.
+
+---
+
+## 🔐 Autenticação & Autorização
+
+### Fluxo de Autenticação
+
+A autenticação é baseada em JWT. O fluxo típico é:
+
+1. Usuário se registra com `POST /auth/register`.
+2. Usuário faz login com `POST /auth/login`.
+3. A API devolve um token JWT.
+4. O cliente envia esse token no header `Authorization: Bearer <token>` para acessar rotas protegidas.
+
+### Endpoints de Auth (exemplo)
+
+- `POST /auth/register`
+  - Cria um novo usuário.
+  - Body (exemplo):
+    ```json
+    {
+      "name": "João Silva",
+      "email": "joao@example.com",
+      "password": "SenhaForte123",
+      "age": 25
+    }
+    ```
+
+- `POST /auth/login`
+  - Faz a autenticação do usuário e retorna um token JWT.
+  - Body (exemplo):
+    ```json
+    {
+      "email": "joao@example.com",
+      "password": "SenhaForte123"
+    }
+    ```
+  - Resposta (exemplo):
+    ```json
+    {
+      "access_token": "<JWT_AQUI>",
+      "user": {
+        "id": "uuid-do-usuario",
+        "name": "João Silva",
+        "email": "joao@example.com",
+        "role": "CUSTOMER"
+      }
+    }
+    ```
+
+### Roles & Guards
+
+- As rotas usam **guards** JWT para proteger recursos: `JwtAuthGuard`.
+- Algumas rotas utilizam o decorator `@Roles(...)` para restringir o acesso a usuários com certos papéis (por exemplo, `ADMIN`, `SELLER`).
+- O papel do usuário é armazenado no campo `role` do modelo `User` (enum `Role` no Prisma).
+
+Exemplo de header de autorização:
+
+```http
+Authorization: Bearer SEU_TOKEN_JWT_AQUI
+```
+
+---
+
+## 👤 Módulo de Usuários
+
+### Modelo (User)
+
+Campos principais (simplificado a partir do `schema.prisma`):
+
+- `id: string` (UUID)
+- `email: string` (único)
+- `name: string`
+- `password: string` (hash da senha)
+- `role: Role` (`ADMIN`, `SELLER`, `CUSTOMER`)
+- `age: number`
+- `createdAt: Date`
+- `updatedAt: Date`
+
+### Endpoints principais
+
+> As rotas abaixo geralmente exigem autenticação via JWT. Algumas também exigem `role` específico (por exemplo, `ADMIN`).
+
+- `GET /user`
+  - Lista de usuários (somente `ADMIN`).
+  - Retorna um array de `UserEntity` (DTO de resposta, sem a senha).
+
+- `GET /user/me`
+  - Retorna os dados do usuário autenticado.
+
+- `GET /user/:id`
+  - Retorna um usuário específico (somente `ADMIN`).
+
+- `PATCH /user/me`
+  - Atualiza parcialmente os dados do usuário autenticado (por exemplo, nome, idade, etc.).
+
+- `PATCH /user/:id`
+  - Atualiza um usuário específico (somente `ADMIN`).
+
+- `DELETE /user/:id`
+  - Remove um usuário (somente `ADMIN`).
+
+Exemplo de resposta (`UserEntity`):
+
+```json
+{
+  "id": "uuid-do-usuario",
+  "name": "João Silva",
+  "email": "joao@example.com",
+  "role": "CUSTOMER",
+  "age": 25,
+  "createdAt": "2025-11-16T10:00:00.000Z",
+  "updatedAt": "2025-11-16T10:00:00.000Z"
+}
+```
+
+---
+
+## 🛒 Módulo de Produtos
+
+### Modelo (Product)
+
+Campos principais (simplificado):
+
+- `id: string` (UUID)
+- `name: string`
+- `description: string | null`
+- `price: number`
+- `stock: number`
+- `isAvailable: boolean`
+- `imageUrl: string | null`
+- `categoryId: string | null`
+- `sellerId: string`
+- `averageRating: number`
+- `createdAt: Date`
+- `updatedAt: Date`
+
+### Endpoints principais
+
+- `POST /products`
+  - Cria um novo produto (geralmente restrito a `SELLER` ou `ADMIN`).
+
+- `GET /products`
+  - Lista paginada de produtos.
+  - Aceita parâmetros de paginação via query string (ex.: `page`, `limit`).
+
+- `GET /products/:id`
+  - Retorna um produto específico.
+
+- `PATCH /products/:id`
+  - Atualiza um produto (geralmente restrito a quem criou ou `ADMIN`).
+
+- `DELETE /products/:id`
+  - Remove um produto (geralmente restrito a quem criou ou `ADMIN`).
+
+Exemplo de resposta (produto):
+
+```json
+{
+  "id": "uuid-do-produto",
+  "name": "Camisa Esportiva",
+  "description": "Camisa oficial do time X",
+  "price": 199.9,
+  "stock": 10,
+  "isAvailable": true,
+  "imageUrl": "https://example.com/camisa.png",
+  "categoryId": "uuid-da-categoria",
+  "sellerId": "uuid-do-vendedor",
+  "averageRating": 4.5,
+  "createdAt": "2025-11-16T10:00:00.000Z",
+  "updatedAt": "2025-11-16T10:00:00.000Z"
+}
+```
+
+---
+
+## 📦 Módulo de Pedidos (Orders)
+
+> A estrutura exata dos DTOs pode ser verificada no Swagger.
+
+### Conceitos
+
+- **Order**: representa um pedido feito por um usuário.
+- **OrderItem**: representa um item (produto + quantidade) dentro de um pedido.
+
+### Endpoints típicos
+
+- `POST /orders`
+  - Cria um novo pedido para o usuário autenticado.
+
+- `GET /orders`
+  - Lista todos os pedidos do usuário autenticado.
+  - Admins podem ter visão ampla, dependendo da implementação.
+
+- `GET /orders/:id`
+  - Detalhes de um pedido específico.
+
+- `PATCH /orders/:id/status`
+  - Atualiza o status de um pedido (ex.: `PENDING`, `PAID`, `SHIPPED`, etc.).
+
+---
+
+## 🗂 Outros Módulos
+
+Dependendo do que já está implementado no seu projeto, você também pode ter:
+
+- **Categorias (`/category`)**
+  - CRUD de categorias de produtos.
+
+- **Avaliações (`/rating`)**
+  - Usuários avaliam produtos (rating + comentário).
+
+- **Endereços (`/adress`)**
+  - Gerenciamento de endereços de entrega do usuário.
+
+- **Métodos de Pagamento (`/payment-method`)**
+  - Cadastro e gerenciamento de formas de pagamento do usuário.
+
+- **Transações de Pagamento (`/payment-transaction`)**
+  - Registro e status de pagamentos de pedidos.
+
+- **Lista de Desejos (`/wish-list`)**
+  - Produtos favoritados pelo usuário.
+
+Use o Swagger para ver exatamente quais endpoints estão expostos e quais DTOs são esperados em cada rota.
+
+---
+
+## ❌ Formato de Erros
+
+Os erros da API seguem, em geral, o padrão de exceções do Nest.js.
+
+Exemplo de erro 404 (Not Found):
+
+```json
+{
+  "statusCode": 404,
+  "message": "User with ID 123 not found",
+  "error": "Not Found"
+}
+```
+
+Exemplo de erro 400 (Bad Request) com validação:
+
+```json
+{
+  "statusCode": 400,
+  "message": [
+    "email must be an email",
+    "password must be longer than or equal to 8 characters"
+  ],
+  "error": "Bad Request"
+}
+```
+
+---
+
+## ✅ Boas Práticas e Próximos Passos
+
+- **Segurança:**
+  - Mantenha o `JWT_SECRET` seguro e use valores diferentes para dev/produção.
+  - Considere usar HTTPS em produção.
+
+- **Logs & Monitoramento:**
+  - Considere adicionar interceptors de logging e ferramentas de monitoramento.
+
+- **Tests:**
+  - Expanda os testes unitários e e2e em `test/`.
+
+- **Documentação:**
+  - Sempre que criar um novo módulo/endpoint, lembre-se de adicionar decorators do Swagger (`@ApiTags`, `@ApiOkResponse`, etc.) para manter a documentação sempre atualizada.
+
+Se você quiser, posso ajudar a detalhar ainda mais a documentação de um módulo específico (por exemplo, Auth, Orders, Payment, etc.) com exemplos completos de request/response. 🙂
