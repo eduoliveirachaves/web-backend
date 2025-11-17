@@ -15,11 +15,13 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PaginationDto } from '@/common/dto/pagination.dto';
 import type { Product } from 'generated/prisma/client';
+import { Roles } from '@/auth/decorators/roles.decorator';
 
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
+  @Roles('SELLER')
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createProductDto: CreateProductDto): Promise<Product> {

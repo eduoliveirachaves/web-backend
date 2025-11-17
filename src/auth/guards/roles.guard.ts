@@ -20,9 +20,11 @@ export class RolesGuard implements CanActivate {
     }
 
     // 3. Pega o objeto 'user' que o JwtAuthGuard anexou à requisição
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { user } = context.switchToHttp().getRequest();
 
     // 4. Compara o papel do usuário com os papéis necessários
-    return requiredRoles.some((role) => user.role === role);
+    const isAdmin = user.role === 'ADMIN';
+    return requiredRoles.some((role) => role === user.role) || isAdmin;
   }
 }
