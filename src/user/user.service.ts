@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Prisma, User } from 'generated/prisma';
-import { UpdateUserDto } from '@/user/dto/update-user.dto';
+import { UpdateMyProfileDto, UpdateUserDto } from '@/user/dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -44,28 +44,14 @@ export class UserService {
     return user;
   }
 
-  updateMe(user: User, updateUserDto: UpdateUserDto): Promise<User> {
-    if (updateUserDto.role === 'ADMIN' && user.role !== 'ADMIN') {
-      throw new UnauthorizedException('Only admins can update other admins');
-    }
-
-    if (
-      updateUserDto.role === 'SELLER' &&
-      user.role !== 'ADMIN' &&
-      user.role !== 'SELLER'
-    ) {
-      throw new UnauthorizedException(
-        'Only admins or sellers can update sellers',
-      );
-    }
-
+  updateMe(user: User, updateUserDto: UpdateMyProfileDto): Promise<User> {
     return this.prisma.user.update({
       where: { id: user.id },
       data: { ...updateUserDto },
     });
   }
 
-  update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     return this.prisma.user.update({
       where: { id },
       data: updateUserDto,

@@ -13,7 +13,7 @@ import { UserService } from './user.service';
 import { UserEntity } from '@/user/entities/user.entity';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 import { GetUser } from '@/auth/decorators/user.decorator';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateMyProfileDto, UpdateUserDto } from './dto/update-user.dto';
 import type { User } from 'generated/prisma/client';
 import { Role } from 'generated/prisma/client';
 import { Roles } from '@/auth/decorators/roles.decorator';
@@ -49,7 +49,7 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   async updateMe(
     @GetUser() user: User,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body() updateUserDto: UpdateMyProfileDto,
   ): Promise<UserEntity> {
     return new UserEntity(await this.userService.updateMe(user, updateUserDto));
   }
@@ -57,11 +57,11 @@ export class UserController {
   @Roles(Role.ADMIN)
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserEntity> {
-    return this.userService.update(id, updateUserDto);
+    return new UserEntity(await this.userService.update(id, updateUserDto));
   }
 
   @Roles(Role.ADMIN)
