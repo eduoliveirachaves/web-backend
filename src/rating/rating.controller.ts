@@ -14,7 +14,7 @@ import { RatingService } from './rating.service';
 import { CreateRatingDto } from './dto/create-rating.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
-import { RatingEntity } from './entities/rating.entity';
+import { RatingDto } from './dto/rating.dto';
 
 @Controller('ratings')
 export class RatingController {
@@ -22,9 +22,7 @@ export class RatingController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(
-    @Body() createRatingDto: CreateRatingDto,
-  ): Promise<RatingEntity> {
+  async create(@Body() createRatingDto: CreateRatingDto): Promise<RatingDto> {
     return this.ratingService.create(createRatingDto);
   }
 
@@ -32,7 +30,7 @@ export class RatingController {
   async findAllByProduct(
     @Param('productId') productId: string,
     @Query() paginationDto?: PaginationDto,
-  ): Promise<RatingEntity[]> {
+  ): Promise<RatingDto[]> {
     return this.ratingService.findAllByProduct(productId, paginationDto);
   }
 
@@ -40,12 +38,12 @@ export class RatingController {
   async findAllByUser(
     @Param('userId') userId: string,
     @Query() paginationDto?: PaginationDto,
-  ): Promise<RatingEntity[]> {
+  ): Promise<RatingDto[]> {
     return this.ratingService.findAllByUser(userId, paginationDto);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<RatingEntity> {
+  async findOne(@Param('id') id: string): Promise<RatingDto> {
     return this.ratingService.findOne(id);
   }
 
@@ -53,7 +51,7 @@ export class RatingController {
   async update(
     @Param('id') id: string,
     @Body() updateRatingDto: UpdateRatingDto,
-  ): Promise<RatingEntity> {
+  ): Promise<RatingDto> {
     return this.ratingService.update(id, updateRatingDto);
   }
 

@@ -9,49 +9,63 @@ import {
   Query,
   HttpStatus,
   HttpCode,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PaginationDto } from '@/common/dto/pagination.dto';
-import type { Product } from 'generated/prisma/client';
 import { Roles } from '@/auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '@/auth/guards/roles.guard';
+import { ProductDto } from '@/product/dto/product.dto';
 
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('SELLER')
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createProductDto: CreateProductDto): Promise<Product> {
-    return this.productService.create(createProductDto);
+  async create(
+    @Body() createProductDto: CreateProductDto,
+  ): Promise<ProductDto> {
+    return new ProductDto(await this.productService.create(createProductDto));
   }
 
   @Get()
-  @HttpCode(HttpStatus.OK)
-  findAll(@Query() paginationDto: PaginationDto): Promise<Product[]> {
-    return this.productService.findAll(paginationDto);
+  async findAll(@Query() paginationDto: PaginationDto): Promise<ProductDto[]> {
+    const products = await this.productService.findAll(paginationDto);
+    return products.map((u) => new ProductDto(u));
   }
+
+  // @Get("seller/:sellerId")
+  // async findAllBySeller(@Query() paginationDto: PaginationDto): Promise<ProductDto[]> {
+  //   const products = await this.productService.findAllBySeller(paginationDto);
+  //   return products.map((u) => new ProductDto(u));
+  // }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string): Promise<Product> {
-    return this.productService.findOne(id);
+  async findOne(@Param('id') id: string): Promise<ProductDto> {
+    return new ProductDto(await this.productService.findOne(id));
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SELLER')
   @Patch(':id')
-  @HttpCode(HttpStatus.OK)
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
-  ): Promise<Product> {
-    return this.productService.update(id, updateProductDto);
+  ): Promise<ProductDto> {
+    return new ProductDto(
+      await this.productService.update(id, updateProductDto),
+    );
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.OK)
-  remove(@Param('id') id: string): Promise<Product> {
-    return this.productService.remove(id);
+  async remove(@Param('id') id: string): Promise<ProductDto> {
+    return new ProductDto(await this.productService.remove(id));
   }
 }

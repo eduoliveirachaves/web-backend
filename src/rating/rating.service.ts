@@ -1,7 +1,7 @@
 import { PrismaService } from '@/prisma/prisma.service';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateRatingDto } from './dto/create-rating.dto';
-import { RatingEntity } from './entities/rating.entity';
+import { RatingDto } from './dto/rating.dto';
 import { PaginationDto } from '@/common/dto/pagination.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
 
@@ -12,7 +12,7 @@ export class RatingService {
   async findAllByProduct(
     productId: string,
     paginationDto?: PaginationDto,
-  ): Promise<RatingEntity[]> {
+  ): Promise<RatingDto[]> {
     const { limit, offset } = paginationDto || {};
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
@@ -33,7 +33,7 @@ export class RatingService {
   async findAllByUser(
     userId: string,
     paginationDto?: PaginationDto,
-  ): Promise<RatingEntity[]> {
+  ): Promise<RatingDto[]> {
     const { limit, offset } = paginationDto || {};
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
@@ -49,7 +49,7 @@ export class RatingService {
     });
   }
 
-  async findOne(id: string): Promise<RatingEntity> {
+  async findOne(id: string): Promise<RatingDto> {
     const rating = await this.prisma.rating.findUnique({
       where: { id },
       include: {
@@ -63,7 +63,7 @@ export class RatingService {
     return rating;
   }
 
-  async create(createRatingDto: CreateRatingDto): Promise<RatingEntity> {
+  async create(createRatingDto: CreateRatingDto): Promise<RatingDto> {
     const { userId, productId, rate, comment } = createRatingDto;
 
     const product = await this.prisma.product.findUnique({
@@ -86,7 +86,7 @@ export class RatingService {
   async update(
     id: string,
     updateRatingDto: UpdateRatingDto,
-  ): Promise<RatingEntity> {
+  ): Promise<RatingDto> {
     const rating = await this.prisma.rating.findUnique({ where: { id } });
 
     if (!rating) {

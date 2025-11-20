@@ -3,13 +3,13 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PaginationDto } from '@/common/dto/pagination.dto';
-import type { Product } from 'generated/prisma/client';
+import type { ProductDto } from 'generated/prisma/client';
 
 @Injectable()
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateProductDto): Promise<Product> {
+  async create(dto: CreateProductDto): Promise<ProductDto> {
     const data = {
       name: dto.name,
       description: dto.description,
@@ -23,7 +23,7 @@ export class ProductService {
     return this.prisma.product.create({ data });
   }
 
-  async findAll(paginationDto?: PaginationDto): Promise<Product[]> {
+  async findAll(paginationDto?: PaginationDto): Promise<ProductDto[]> {
     const { limit, offset } = paginationDto || {};
 
     return this.prisma.product.findMany({
@@ -33,7 +33,7 @@ export class ProductService {
     });
   }
 
-  async findOne(id: string): Promise<Product> {
+  async findOne(id: string): Promise<ProductDto> {
     const product = await this.prisma.product.findUnique({
       where: { id: id },
       include: { seller: true },
@@ -46,7 +46,7 @@ export class ProductService {
     return product;
   }
 
-  async update(id: string, dto: UpdateProductDto): Promise<Product> {
+  async update(id: string, dto: UpdateProductDto): Promise<ProductDto> {
     const findProduct = await this.prisma.product.findFirst({ where: { id } });
 
     if (!findProduct) {
@@ -59,7 +59,7 @@ export class ProductService {
     });
   }
 
-  async remove(id: string): Promise<Product> {
+  async remove(id: string): Promise<ProductDto> {
     const findProduct = await this.prisma.product.findFirst({ where: { id } });
 
     if (!findProduct) {

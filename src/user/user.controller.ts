@@ -10,7 +10,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UserEntity } from '@/user/entities/user.entity';
+import { UserDto } from '@/user/dto/user.dto';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 import { GetUser } from '@/auth/decorators/user.decorator';
 import { UpdateMyProfileDto, UpdateUserDto } from './dto/update-user.dto';
@@ -27,22 +27,22 @@ export class UserController {
   @Get()
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
-  async findAll(): Promise<UserEntity[]> {
+  async findAll(): Promise<UserDto[]> {
     const users = await this.userService.findAll();
-    return users.map((u) => new UserEntity(u));
+    return users.map((u) => new UserDto(u));
   }
 
   @Get('me')
   @HttpCode(HttpStatus.OK)
-  findMe(@GetUser() user: User): UserEntity {
-    return new UserEntity(user);
+  findMe(@GetUser() user: User): UserDto {
+    return new UserDto(user);
   }
 
   @Roles(Role.ADMIN)
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string): Promise<UserEntity> {
-    return new UserEntity(await this.userService.findOneById(id));
+  async findOne(@Param('id') id: string): Promise<UserDto> {
+    return new UserDto(await this.userService.findOneById(id));
   }
 
   @Patch('me')
@@ -50,8 +50,8 @@ export class UserController {
   async updateMe(
     @GetUser() user: User,
     @Body() updateUserDto: UpdateMyProfileDto,
-  ): Promise<UserEntity> {
-    return new UserEntity(await this.userService.updateMe(user, updateUserDto));
+  ): Promise<UserDto> {
+    return new UserDto(await this.userService.updateMe(user, updateUserDto));
   }
 
   @Roles(Role.ADMIN)
@@ -60,8 +60,8 @@ export class UserController {
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<UserEntity> {
-    return new UserEntity(await this.userService.update(id, updateUserDto));
+  ): Promise<UserDto> {
+    return new UserDto(await this.userService.update(id, updateUserDto));
   }
 
   @Roles(Role.ADMIN)

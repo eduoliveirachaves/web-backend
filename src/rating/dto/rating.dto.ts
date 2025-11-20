@@ -1,7 +1,7 @@
 import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
-export class RatingEntity {
+export class RatingDto {
   @Expose()
   id: string;
 

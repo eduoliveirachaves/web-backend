@@ -1,9 +1,9 @@
 import { Exclude, Expose, Type } from 'class-transformer';
-import { ProductEntity } from '@/product/entities/product.entity';
+import { ProductDto } from '@/product/dto/product.dto';
 import type { Role } from 'generated/prisma/client';
 
 @Exclude()
-export class UserEntity {
+export class UserDto {
   @Expose()
   id: string;
 
@@ -16,23 +16,23 @@ export class UserEntity {
   @Exclude()
   password: string;
 
-  @Expose()
+  @Exclude()
   role: Role;
 
   @Expose()
   age: number;
 
-  @Expose()
+  @Exclude()
   createdAt: Date;
 
-  @Expose()
+  @Exclude()
   updatedAt: Date;
 
-  @Expose()
-  @Type(() => ProductEntity)
-  products?: ProductEntity[];
+  @Exclude()
+  @Type(() => ProductDto)
+  products?: ProductDto[];
 
-  constructor(partial: Partial<UserEntity>) {
+  constructor(partial: Partial<UserDto>) {
     Object.assign(this, partial);
   }
 }

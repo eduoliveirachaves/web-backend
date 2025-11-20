@@ -1,4 +1,4 @@
-import { ProductEntity } from '@/product/entities/product.entity';
+import { ProductDto } from '@/product/dto/product.dto';
 import { Expose, Type } from 'class-transformer';
 
 export class OrderItemEntity {
@@ -15,6 +15,6 @@ export class OrderItemEntity {
   quantity: number;
 
   @Expose()
-  @Type(() => ProductEntity)
-  product?: ProductEntity;
+  @Type(() => ProductDto)
+  product?: ProductDto;
 }
