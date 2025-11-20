@@ -229,7 +229,7 @@ Campos principais (simplificado a partir do `schema.prisma`):
 
 - `GET /user`
   - Lista de usuários (somente `ADMIN`).
-  - Retorna um array de `UserEntity` (DTO de resposta, sem a senha).
+  - Retorna um array de `UserDto` (DTO de resposta, sem a senha).
 
 - `GET /user/me`
   - Retorna os dados do usuário autenticado.
@@ -246,7 +246,7 @@ Campos principais (simplificado a partir do `schema.prisma`):
 - `DELETE /user/:id`
   - Remove um usuário (somente `ADMIN`).
 
-Exemplo de resposta (`UserEntity`):
+Exemplo de resposta (`UserDto`):
 
 ```json
 {
