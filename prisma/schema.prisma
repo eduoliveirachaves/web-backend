@@ -6,7 +6,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  // Use a conexão direta (porta 5432) APENAS para migrações:
+  // Use a conexão direta (porta 5432) APENAS para migrações
   directUrl = env("DIRECT_URL")
 }
 

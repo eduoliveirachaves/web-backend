@@ -1,23 +1,19 @@
-import { NestFactory, Reflector } from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
-import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
-import { setupSwagger } from '@/settings/swagger.settings';
+import { setupSwagger } from '@/config/swagger.config';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
 
-  setupSwagger(app);
+  // Carrega as configs do arquivo .env
+  const configService = app.get(ConfigService);
 
-  const reflector = app.get(Reflector);
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector));
+  // Configura o swagger
+  setupSwagger(app, 'docs');
 
-  await app.listen(process.env.PORT ?? 3000);
+  // Configura a porta do servidor
+  await app.listen(configService.getOrThrow<number>('port'));
 }
 
 bootstrap();

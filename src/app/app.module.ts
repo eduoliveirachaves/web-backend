@@ -1,4 +1,8 @@
-import { Module } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Module,
+  ValidationPipe,
+} from '@nestjs/common';
 import { UserController } from '@/user/user.controller';
 import { UserService } from '@/user/user.service';
 import { UserModule } from '@/user/user.module';
@@ -13,9 +17,25 @@ import { PaymentMethodModule } from '@/payment-method/payment-method.module';
 import { PaymentTransactionModule } from '@/payment-transaction/payment-transaction.module';
 import { WishListModule } from '@/wish-list/wish-list.module';
 import { AppController } from '@/app/app.controller';
+import { ConfigModule } from '@nestjs/config';
+import appConfig from '@/config/app.config';
+import * as Joi from 'joi';
+import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [appConfig],
+      validationSchema: Joi.object({
+        NODE_ENV: Joi.string()
+          .valid('development', 'production', 'test')
+          .default('development'),
+        PORT: Joi.number().default(3000),
+        DATABASE_URL: Joi.string().required(),
+        JWT_SECRET: Joi.string().required(),
+      }),
+    }),
     UserModule,
     AuthModule,
     PrismaModule,
@@ -29,6 +49,20 @@ import { AppController } from '@/app/app.controller';
     WishListModule,
   ],
   controllers: [UserController, AppController],
-  providers: [UserService],
+  providers: [
+    UserService,
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ClassSerializerInterceptor,
+    },
+  ],
 })
 export class AppModule {}
