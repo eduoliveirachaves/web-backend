@@ -6,6 +6,8 @@ import { ConfigService } from '@nestjs/config';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors();
+
   // Carrega as configs do arquivo .env
   const configService = app.get(ConfigService);
 
