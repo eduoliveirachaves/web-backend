@@ -1,4 +1,4 @@
-import { Exclude, Expose, Type } from 'class-transformer';
+import { Exclude, Expose, Type, Transform } from 'class-transformer';
 import { UserDto } from '@/user/dto/user.dto';
 import { RatingDto } from '@/rating/dto/rating.dto';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -11,9 +11,11 @@ export class ProductDto {
   @Expose()
   name: string;
 
+  @Transform(({ value }) => value ?? undefined)
   @Expose()
   description?: string | null;
 
+  @Transform(({ value }) => Number(value))
   @Expose()
   price: Decimal;
 
@@ -23,9 +25,11 @@ export class ProductDto {
   @Expose()
   isAvailable: boolean;
 
+  @Transform(({ value }) => value ?? undefined)
   @Expose()
   imageUrl?: string | null;
 
+  @Transform(({ value }) => value ?? undefined)
   @Expose()
   categoryId?: string | null;
 

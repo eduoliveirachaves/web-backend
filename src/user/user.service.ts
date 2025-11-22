@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Prisma, User } from 'generated/prisma';
 import { UpdateMyProfileDto, UpdateUserDto } from '@/user/dto/update-user.dto';
