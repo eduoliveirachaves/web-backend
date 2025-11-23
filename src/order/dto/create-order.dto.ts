@@ -20,6 +20,7 @@ export class CreateOrderDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
+  @IsOptional()
   readonly items: OrderItemDto[];
 
   @IsEnum(OrderStatus)

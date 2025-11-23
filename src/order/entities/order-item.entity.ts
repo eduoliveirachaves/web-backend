@@ -15,6 +15,9 @@ export class OrderItemEntity {
   quantity: number;
 
   @Expose()
+  unitPrice: number;
+
+  @Expose()
   @Type(() => ProductDto)
   product?: ProductDto;
 }

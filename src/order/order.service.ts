@@ -5,6 +5,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Prisma } from 'generated/prisma';
 import { PaginationDto } from '@/common/dto/pagination.dto';
+
 @Injectable()
 export class OrderService {
   constructor(private prisma: PrismaService) {}
@@ -14,25 +15,61 @@ export class OrderService {
     const allOrders = await this.prisma.order.findMany({
       take: limit,
       skip: offset,
+      include: { items: true },
     });
-    return allOrders;
+
+    return allOrders.map((order) => ({
+      ...order,
+      totalAmount: Number(order.totalAmount),
+      items: order.items.map((item) => ({
+        ...item,
+        unitPrice: Number(item.unitPrice),
+      })),
+    }));
   }
 
   async findOne(id: string) {
     const order = await this.prisma.order.findFirst({
-      where: {
-        id: id,
-      },
+      where: { id },
+      include: { items: true },
     });
 
-    if (order?.id) return order;
+    if (!order) {
+      throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
+    }
 
-    throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
+    return {
+      ...order,
+      totalAmount: Number(order.totalAmount),
+      items: order.items.map((item) => ({
+        ...item,
+        unitPrice: Number(item.unitPrice),
+      })),
+    } as OrderEntity;
   }
 
   async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
-    const { userId, items, status } = createOrderDto;
+    const { userId, items = [], status } = createOrderDto;
 
+    // Se não há items, cria um pedido vazio (carrinho vazio)
+    if (!items || items.length === 0) {
+      const order = await this.prisma.order.create({
+        data: {
+          userId,
+          totalAmount: 0,
+          status: status || 'IN_CART',
+        },
+        include: { items: true },
+      });
+
+      return {
+        ...order,
+        totalAmount: 0,
+        items: [],
+      } as OrderEntity;
+    }
+
+    // Caso contrário, processa os items normalmente
     const products = await this.prisma.product.findMany({
       where: {
         id: { in: items.map((i) => i.productId) },
@@ -66,7 +103,6 @@ export class OrderService {
       include: { items: true },
     });
 
-    // Converter campos Decimal para number manualmente. Sem isso a logica nao estava funcionando.
     return {
       ...order,
       totalAmount: Number(order.totalAmount),
@@ -81,7 +117,6 @@ export class OrderService {
     id: string,
     updateOrderDto: UpdateOrderDto,
   ): Promise<OrderEntity> {
-    // Verifica se a ordem existe
     const existingOrder = await this.prisma.order.findUnique({
       where: { id },
       include: { items: true },
@@ -91,7 +126,6 @@ export class OrderService {
       throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
     }
 
-    // Impede alteração de items se o pedido não estiver IN_CART
     if (updateOrderDto.items && existingOrder.status !== 'IN_CART') {
       throw new HttpException(
         'Não é possível alterar items de um pedido que não está no carrinho',
@@ -103,16 +137,13 @@ export class OrderService {
 
     let updatedOrder;
 
-    // Caso o update inclua novos items (alteração de produtos ou quantidades)
     if (items && items.length > 0) {
-      // Busca os produtos dos items
       const products = await this.prisma.product.findMany({
         where: {
           id: { in: items.map((i) => i.productId!) },
         },
       });
 
-      // Monta os novos items
       const updatedItems = items.map((item) => {
         const product = products.find((p) => p.id === item.productId);
         if (!product)
@@ -128,28 +159,25 @@ export class OrderService {
         };
       });
 
-      // Recalcula total
       const totalAmount = updatedItems.reduce(
         (acc, item) => acc + Number(item.unitPrice) * (item.quantity ?? 0),
         0,
       );
 
-      // Atualiza ordem (deleta items antigos e recria)
       updatedOrder = await this.prisma.order.update({
         where: { id },
         data: {
           status: status ?? existingOrder.status,
           totalAmount,
           items: {
-            deleteMany: {}, // remove items antigos
+            deleteMany: {},
             create:
-              updatedItems as Prisma.OrderItemUncheckedCreateWithoutOrderInput[], // recria os novos
+              updatedItems as Prisma.OrderItemUncheckedCreateWithoutOrderInput[],
           },
         },
         include: { items: true },
       });
     } else {
-      // Atualiza apenas o status ou campos simples
       updatedOrder = await this.prisma.order.update({
         where: { id },
         data: { status },
@@ -157,7 +185,6 @@ export class OrderService {
       });
     }
 
-    // Converte Decimal → number
     return {
       ...updatedOrder,
       totalAmount: Number(updatedOrder.totalAmount),
@@ -178,8 +205,6 @@ export class OrderService {
         throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
       }
 
-      //Necessario para deletar os items do pedido antes do pedido ser deletado.
-      // Implementar no schema do prisma depois e retirar daqui.
       await this.prisma.orderItem.deleteMany({
         where: { orderId: id },
       });
@@ -193,7 +218,7 @@ export class OrderService {
       };
     } catch (err) {
       throw new HttpException(
-        'Falha ao deletar a tarefa',
+        'Falha ao deletar o pedido',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -201,9 +226,6 @@ export class OrderService {
 
   // ========== MÉTODOS ESPECÍFICOS PARA CARRINHO ==========
 
-  /**
-   * Adiciona um item ao carrinho (order com status IN_CART)
-   */
   async addItemToCart(
     orderId: string,
     productId: string,
@@ -233,19 +255,16 @@ export class OrderService {
       throw new HttpException('Produto não encontrado', HttpStatus.NOT_FOUND);
     }
 
-    // Verifica se o item já existe no carrinho
     const existingItem = order.items.find(
       (item) => item.productId === productId,
     );
 
     if (existingItem) {
-      // Se já existe, apenas incrementa a quantidade
       await this.prisma.orderItem.update({
         where: { id: existingItem.id },
         data: { quantity: existingItem.quantity + quantity },
       });
     } else {
-      // Se não existe, cria novo item
       await this.prisma.orderItem.create({
         data: {
           orderId,
@@ -256,14 +275,10 @@ export class OrderService {
       });
     }
 
-    // Recalcula o total
     const updatedOrder = await this.recalculateOrderTotal(orderId);
     return updatedOrder;
   }
 
-  /**
-   * Atualiza a quantidade de um item no carrinho
-   */
   async updateCartItemQuantity(
     orderId: string,
     itemId: string,
@@ -299,14 +314,10 @@ export class OrderService {
       data: { quantity },
     });
 
-    // Recalcula o total
     const updatedOrder = await this.recalculateOrderTotal(orderId);
     return updatedOrder;
   }
 
-  /**
-   * Remove um item do carrinho
-   */
   async removeCartItem(orderId: string, itemId: string): Promise<OrderEntity> {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
@@ -337,14 +348,10 @@ export class OrderService {
       where: { id: itemId },
     });
 
-    // Recalcula o total
     const updatedOrder = await this.recalculateOrderTotal(orderId);
     return updatedOrder;
   }
 
-  /**
-   * Limpa todos os items do carrinho
-   */
   async clearCart(orderId: string): Promise<OrderEntity> {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
@@ -378,9 +385,6 @@ export class OrderService {
     } as OrderEntity;
   }
 
-  /**
-   * Recalcula o total do pedido com base nos items atuais
-   */
   private async recalculateOrderTotal(orderId: string): Promise<OrderEntity> {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
