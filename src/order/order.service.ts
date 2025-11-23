@@ -10,42 +10,37 @@ import { PaginationDto } from '@/common/dto/pagination.dto';
 export class OrderService {
   constructor(private prisma: PrismaService) {}
 
+  // Helper para incluir items com produtos
+  private readonly includeItemsWithProduct = {
+    items: {
+      include: {
+        product: true,
+      },
+    },
+  };
+
   async findAll(paginationDto?: PaginationDto) {
     const { limit, offset } = paginationDto || {};
     const allOrders = await this.prisma.order.findMany({
       take: limit,
       skip: offset,
-      include: { items: true },
+      include: this.includeItemsWithProduct,
     });
 
-    return allOrders.map((order) => ({
-      ...order,
-      totalAmount: Number(order.totalAmount),
-      items: order.items.map((item) => ({
-        ...item,
-        unitPrice: Number(item.unitPrice),
-      })),
-    }));
+    return allOrders.map((order) => this.formatOrder(order));
   }
 
   async findOne(id: string) {
     const order = await this.prisma.order.findFirst({
       where: { id },
-      include: { items: true },
+      include: this.includeItemsWithProduct,
     });
 
     if (!order) {
       throw new HttpException('Pedido não encontrado', HttpStatus.NOT_FOUND);
     }
 
-    return {
-      ...order,
-      totalAmount: Number(order.totalAmount),
-      items: order.items.map((item) => ({
-        ...item,
-        unitPrice: Number(item.unitPrice),
-      })),
-    } as OrderEntity;
+    return this.formatOrder(order);
   }
 
   async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
@@ -59,14 +54,10 @@ export class OrderService {
           totalAmount: 0,
           status: status || 'IN_CART',
         },
-        include: { items: true },
+        include: this.includeItemsWithProduct,
       });
 
-      return {
-        ...order,
-        totalAmount: 0,
-        items: [],
-      } as OrderEntity;
+      return this.formatOrder(order);
     }
 
     // Caso contrário, processa os items normalmente
@@ -100,17 +91,10 @@ export class OrderService {
         status: status || 'PENDING',
         items: { create: orderItems },
       },
-      include: { items: true },
+      include: this.includeItemsWithProduct,
     });
 
-    return {
-      ...order,
-      totalAmount: Number(order.totalAmount),
-      items: order.items.map((item) => ({
-        ...item,
-        unitPrice: Number(item.unitPrice),
-      })),
-    } as OrderEntity;
+    return this.formatOrder(order);
   }
 
   async update(
@@ -119,7 +103,7 @@ export class OrderService {
   ): Promise<OrderEntity> {
     const existingOrder = await this.prisma.order.findUnique({
       where: { id },
-      include: { items: true },
+      include: this.includeItemsWithProduct,
     });
 
     if (!existingOrder) {
@@ -175,24 +159,17 @@ export class OrderService {
               updatedItems as Prisma.OrderItemUncheckedCreateWithoutOrderInput[],
           },
         },
-        include: { items: true },
+        include: this.includeItemsWithProduct,
       });
     } else {
       updatedOrder = await this.prisma.order.update({
         where: { id },
         data: { status },
-        include: { items: true },
+        include: this.includeItemsWithProduct,
       });
     }
 
-    return {
-      ...updatedOrder,
-      totalAmount: Number(updatedOrder.totalAmount),
-      items: updatedOrder.items.map((item) => ({
-        ...item,
-        unitPrice: Number(item.unitPrice),
-      })),
-    } as OrderEntity;
+    return this.formatOrder(updatedOrder);
   }
 
   async delete(id: string) {
@@ -233,7 +210,7 @@ export class OrderService {
   ): Promise<OrderEntity> {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: true },
+      include: this.includeItemsWithProduct,
     });
 
     if (!order) {
@@ -286,7 +263,7 @@ export class OrderService {
   ): Promise<OrderEntity> {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: true },
+      include: this.includeItemsWithProduct,
     });
 
     if (!order) {
@@ -321,7 +298,7 @@ export class OrderService {
   async removeCartItem(orderId: string, itemId: string): Promise<OrderEntity> {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: true },
+      include: this.includeItemsWithProduct,
     });
 
     if (!order) {
@@ -375,20 +352,16 @@ export class OrderService {
     const updatedOrder = await this.prisma.order.update({
       where: { id: orderId },
       data: { totalAmount: 0 },
-      include: { items: true },
+      include: this.includeItemsWithProduct,
     });
 
-    return {
-      ...updatedOrder,
-      totalAmount: Number(updatedOrder.totalAmount),
-      items: [],
-    } as OrderEntity;
+    return this.formatOrder(updatedOrder);
   }
 
   private async recalculateOrderTotal(orderId: string): Promise<OrderEntity> {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: true },
+      include: this.includeItemsWithProduct,
     });
 
     if (!order) {
@@ -403,15 +376,26 @@ export class OrderService {
     const updatedOrder = await this.prisma.order.update({
       where: { id: orderId },
       data: { totalAmount },
-      include: { items: true },
+      include: this.includeItemsWithProduct,
     });
 
+    return this.formatOrder(updatedOrder);
+  }
+
+  // Helper para formatar a resposta do order
+  private formatOrder(order: any): OrderEntity {
     return {
-      ...updatedOrder,
-      totalAmount: Number(updatedOrder.totalAmount),
-      items: updatedOrder.items.map((item) => ({
+      ...order,
+      totalAmount: Number(order.totalAmount),
+      items: order.items.map((item: any) => ({
         ...item,
         unitPrice: Number(item.unitPrice),
+        product: item.product
+          ? {
+              ...item.product,
+              price: Number(item.product.price),
+            }
+          : undefined,
       })),
     } as OrderEntity;
   }
