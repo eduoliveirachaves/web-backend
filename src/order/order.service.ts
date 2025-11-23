@@ -88,7 +88,7 @@ export class OrderService {
       data: {
         userId,
         totalAmount,
-        status: status || 'PENDING',
+        status: status || 'IN_CART',
         items: { create: orderItems },
       },
       include: this.includeItemsWithProduct,
@@ -382,7 +382,6 @@ export class OrderService {
     return this.formatOrder(updatedOrder);
   }
 
-  // Helper para formatar a resposta do order
   private formatOrder(order: any): OrderEntity {
     return {
       ...order,
