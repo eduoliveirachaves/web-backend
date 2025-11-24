@@ -398,4 +398,22 @@ export class OrderService {
       })),
     } as OrderEntity;
   }
+  async findAllByUser(userId: string) {
+    return this.prisma.order.findMany({
+      where: {
+        userId: userId,
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
 }
+

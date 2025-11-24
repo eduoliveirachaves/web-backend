@@ -99,4 +99,9 @@ export class OrderController {
   clearCart(@Param('id') orderId: string) {
     return this.orderService.clearCart(orderId);
   }
+  
+  @Get('user/:userId')
+  findAllByUser(@Param('userId') userId: string) {
+    return this.orderService.findAllByUser(userId);
+  }
 }
