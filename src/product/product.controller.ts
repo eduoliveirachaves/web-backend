@@ -35,11 +35,17 @@ export class ProductController {
   }
 
   @Get()
-  async findAll(@Query() paginationDto: PaginationDto): Promise<ProductDto[]> {
-    const products = await this.productService.findAll(paginationDto);
-    return products.map((u) => new ProductDto(u));
-  }
-
+  async findAll(
+      @Query() paginationDto: PaginationDto,
+      @Query('search') search?: string,
+    ): Promise<ProductDto[]> {
+        console.log('>>> CHEGOU NO BACKEND!');
+        console.log('>>> Termo de busca:', search);
+        const products = await this.productService.findAll(paginationDto, search);
+        console.log('>>> Produtos encontrados no banco:', products.length);
+        return products.map((u) => new ProductDto(u));
+    }
+  
   // @Get("seller/:sellerId")
   // async findAllBySeller(@Query() paginationDto: PaginationDto): Promise<ProductDto[]> {
   //   const products = await this.productService.findAllBySeller(paginationDto);

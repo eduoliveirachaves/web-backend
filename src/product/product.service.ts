@@ -23,12 +23,22 @@ export class ProductService {
     return this.prisma.product.create({ data });
   }
 
-  async findAll(paginationDto?: PaginationDto): Promise<Product[]> {
+  async findAll(paginationDto?: PaginationDto, search?: string): Promise<Product[]> {
     const { limit, offset } = paginationDto || {};
+
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
     return this.prisma.product.findMany({
       take: limit,
       skip: offset,
+      where, 
       include: { seller: { select: { id: true, email: true, name: true } } },
     });
   }
